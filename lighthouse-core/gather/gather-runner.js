@@ -398,15 +398,15 @@ class GatherRunner {
     const hostUserAgent = (await options.driver.getBrowserVersion()).userAgent;
 
     const {emulatedFormFactor} = options.settings;
+    // Whether Lighthouse was run on a mobile device (i.e. not on a desktop machine).
     const IsMobileHost = hostUserAgent.includes('Android') || hostUserAgent.includes('Mobile');
-    const IsMobileFormFactor = emulatedFormFactor === 'mobile' ||
+    const FormFactorIsMobile = emulatedFormFactor === 'mobile' ||
       (emulatedFormFactor !== 'desktop' && IsMobileHost);
 
     return {
       fetchTime: (new Date()).toJSON(),
       LighthouseRunWarnings: [],
-      IsMobileFormFactor,
-      IsMobileHost,
+      FormFactorIsMobile,
       HostUserAgent: hostUserAgent,
       NetworkUserAgent: '', // updated later
       BenchmarkIndex: 0, // updated later

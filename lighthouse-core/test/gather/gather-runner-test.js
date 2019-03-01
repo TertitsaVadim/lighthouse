@@ -157,7 +157,7 @@ describe('GatherRunner', function() {
     });
   });
 
-  describe('collects IsMobileFormFactor and IsMobileHost as artifacts', () => {
+  describe('collects FormFactorIsMobile as an artifact', () => {
     const url = 'https://example.com';
 
     it('works when running on desktop device without emulation', async () => {
@@ -167,8 +167,7 @@ describe('GatherRunner', function() {
       const options = {url, driver, config, settings};
 
       const results = await GatherRunner.run(config.passes, options);
-      expect(results.IsMobileFormFactor).toBe(false);
-      expect(results.IsMobileHost).toBe(false);
+      expect(results.FormFactorIsMobile).toBe(false);
     });
 
     it('works when running on desktop device with mobile emulation', async () => {
@@ -178,8 +177,7 @@ describe('GatherRunner', function() {
       const options = {url, driver, config, settings};
 
       const results = await GatherRunner.run(config.passes, options);
-      expect(results.IsMobileFormFactor).toBe(true);
-      expect(results.IsMobileHost).toBe(false);
+      expect(results.FormFactorIsMobile).toBe(true);
     });
 
     it('works when running on mobile device without emulation', async () => {
@@ -189,8 +187,7 @@ describe('GatherRunner', function() {
       const options = {url, driver, config, settings};
 
       const results = await GatherRunner.run(config.passes, options);
-      expect(results.IsMobileFormFactor).toBe(true);
-      expect(results.IsMobileHost).toBe(true);
+      expect(results.FormFactorIsMobile).toBe(true);
     });
 
     it('works when running on mobile device with desktop emulation', async () => {
@@ -200,8 +197,7 @@ describe('GatherRunner', function() {
       const options = {url, driver, config, settings};
 
       const results = await GatherRunner.run(config.passes, options);
-      expect(results.IsMobileFormFactor).toBe(false);
-      expect(results.IsMobileHost).toBe(true);
+      expect(results.FormFactorIsMobile).toBe(false);
     });
   });
 

@@ -19,7 +19,7 @@ class ContentWidth extends Audit {
       description: 'If the width of your app\'s content doesn\'t match the width ' +
           'of the viewport, your app might not be optimized for mobile screens. ' +
           '[Learn more](https://developers.google.com/web/tools/lighthouse/audits/content-sized-correctly-for-viewport).',
-      requiredArtifacts: ['ViewportDimensions', 'IsMobileFormFactor'],
+      requiredArtifacts: ['ViewportDimensions', 'FormFactorIsMobile'],
     };
   }
 
@@ -28,7 +28,7 @@ class ContentWidth extends Audit {
    * @return {LH.Audit.Product}
    */
   static audit(artifacts) {
-    const IsMobile = artifacts.IsMobileFormFactor;
+    const IsMobile = artifacts.FormFactorIsMobile;
     const viewportWidth = artifacts.ViewportDimensions.innerWidth;
     const windowWidth = artifacts.ViewportDimensions.outerWidth;
     const widthsMatch = viewportWidth === windowWidth;

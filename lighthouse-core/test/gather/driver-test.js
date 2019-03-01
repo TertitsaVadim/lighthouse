@@ -662,6 +662,19 @@ describe('.gotoURL', () => {
       expect(driver._waitForCPUIdle.getMockCancelFn()).toHaveBeenCalled();
     });
 
+    it('should cleanup listeners even when waits reject', async () => {
+      driver._waitForLoadEvent = createMockWaitForFn();
+
+      const loadPromise = makePromiseInspectable(driver.gotoURL(url, {waitForLoad: true}));
+
+      driver._waitForLoadEvent.mockReject();
+      await flushAllTimersAndMicrotasks();
+      expect(loadPromise).toBeDone('Did not reject load promise when load rejected');
+      await expect(loadPromise).rejects.toBeTruthy();
+      // Make sure we still cleaned up our listeners
+      expect(driver._waitForLoadEvent.getMockCancelFn()).toHaveBeenCalled();
+    });
+
     it('does not reject when page is secure', async () => {
       const secureSecurityState = {
         explanations: [],

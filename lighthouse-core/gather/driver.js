@@ -890,7 +890,7 @@ class Driver {
       };
     }).catch(err => {
       // Throw the error in the cleanupFn so we still cleanup all our handlers.
-      return function () {
+      return function() {
         throw err;
       };
     });

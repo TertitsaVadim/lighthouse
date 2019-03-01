@@ -399,13 +399,13 @@ class GatherRunner {
 
     const {emulatedFormFactor} = options.settings;
     const IsMobileHost = hostUserAgent.includes('Android') || hostUserAgent.includes('Mobile');
-    const IsMobile = emulatedFormFactor === 'mobile' ||
+    const IsMobileFormFactor = emulatedFormFactor === 'mobile' ||
       (emulatedFormFactor !== 'desktop' && IsMobileHost);
 
     return {
       fetchTime: (new Date()).toJSON(),
       LighthouseRunWarnings: [],
-      IsMobile,
+      IsMobileFormFactor,
       IsMobileHost,
       HostUserAgent: hostUserAgent,
       NetworkUserAgent: '', // updated later

@@ -24,7 +24,7 @@ declare global {
       /** A set of warnings about unexpected things encountered while loading and testing the page. */
       LighthouseRunWarnings: string[];
       /** Whether the page was loaded on either a real or emulated mobile device. */
-      IsMobile: boolean;
+      IsMobileFormFactor: boolean;
       /** Whether Lighthouse was run on a mobile device (i.e. not on a desktop machine). */
       IsMobileHost: boolean;
       /** The user agent string of the version of Chrome used. */

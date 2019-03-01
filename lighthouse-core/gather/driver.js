@@ -72,6 +72,8 @@ class Driver {
     let targetProxyMessageId = 0;
     this.on('Target.attachedToTarget', event => {
       targetProxyMessageId++;
+      // We're only interested in network requests from iframes for now as those are "part of the page".
+      if (event.targetInfo.type !== 'iframe') return;
 
       // We want to receive information about network requests from iframes, so enable the Network domain.
       // Network events from subtargets will be stringified and sent back on `Target.receivedMessageFromTarget`.

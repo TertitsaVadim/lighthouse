@@ -6,22 +6,22 @@
 'use strict';
 
 /**
- * @fileoverview Ensures every accesskey attribute value is unique.
+ * @fileoverview Ensures accesskey values are unique.
  * See base class in axe-audit.js for audit() implementation.
  */
 
-const AxeAudit = require('./axe-audit');
+const AxeAudit = require('./axe-audit.js');
 const i18n = require('../../lib/i18n/i18n.js');
 
 const UIStrings = {
   /** Title of an accesibility audit that evaluates if the accesskey HTML attribute values are unique across all elements. This title is descriptive of the successful state and is shown to users when no user action is required. */
   title: '`[accesskey]` values are unique',
-  /** Title of an accesibility audit that evaluates if the accesskey HTML attribute values are unique across all elements. This title is descriptive of the failing state and is shown to users when there is a failure that needs to be addressed. */
+  /** Title of an accesibility audit that evaluates if the ARIA HTML attributes are misaligned with the aria-role HTML attribute specificed on the element, such mismatches are invalid. This title is descriptive of the failing state and is shown to users when there is a failure that needs to be addressed. */
   failureTitle: '`[accesskey]` values are not unique',
   /** Description of a Lighthouse audit that tells the user *why* they should try to pass. This is displayed after a user expands the section to see more. No character length limits. 'Learn More' becomes link text to additional documentation. */
   description: 'Access keys let users quickly focus a part of the page. For proper ' +
       'navigation, each access key must be unique. ' +
-      '[Learn more](https://dequeuniversity.com/rules/axe/2.2/accesskeys?application=lighthouse).',
+      '[Learn more](https://dequeuniversity.com/rules/axe/3.1/accesskeys?application=lighthouse).',
 };
 
 const str_ = i18n.createMessageInstanceIdFn(__filename, UIStrings);

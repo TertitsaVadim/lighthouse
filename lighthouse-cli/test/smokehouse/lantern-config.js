@@ -5,20 +5,20 @@
  */
 'use strict';
 
-const Gatherer = require('../gatherer');
-
-class MetaDescription extends Gatherer {
-  /**
-   * @param {LH.Gatherer.PassContext} passContext
-   * @return {Promise<LH.Artifacts['MetaDescription']>}
-   */
-  afterPass(passContext) {
-    const driver = passContext.driver;
-
-    return driver.querySelector('head meta[name="description" i]')
-      .then(node => node && node.getAttribute('content'));
-  }
-}
-
-module.exports = MetaDescription;
-
+/**
+ * Config file for running byte efficiency smokehouse audits.
+ */
+module.exports = {
+  extends: 'lighthouse:full',
+  settings: {
+    onlyCategories: ['performance'],
+    precomputedLanternData: {
+      additionalRttByOrigin: {
+        'http://localhost:10200': 500,
+      },
+      serverResponseTimeByOrigin: {
+        'http://localhost:10200': 1000,
+      },
+    },
+  },
+};

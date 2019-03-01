@@ -9,20 +9,21 @@
 
 const path = require('path');
 
-const Printer = require('./printer');
+const Printer = require('./printer.js');
 const ChromeLauncher = require('chrome-launcher');
 
 const yargsParser = require('yargs-parser');
-const lighthouse = require('../lighthouse-core');
+const lighthouse = require('../lighthouse-core/index.js');
 const log = require('lighthouse-logger');
-const getFilenamePrefix = require('../lighthouse-core/lib/file-namer').getFilenamePrefix;
-const assetSaver = require('../lighthouse-core/lib/asset-saver');
+const getFilenamePrefix = require('../lighthouse-core/lib/file-namer.js').getFilenamePrefix;
+const assetSaver = require('../lighthouse-core/lib/asset-saver.js');
 
 const opn = require('opn');
 
 const _RUNTIME_ERROR_CODE = 1;
 const _PROTOCOL_TIMEOUT_EXIT_CODE = 67;
 const _PAGE_HUNG_EXIT_CODE = 68;
+const _INSECURE_DOCUMENT_REQUEST_EXIT_CODE = 69;
 
 /**
  * exported for testing
@@ -77,6 +78,12 @@ function showPageHungError(err) {
   process.exit(_PAGE_HUNG_EXIT_CODE);
 }
 
+/** @param {LH.LighthouseError} err */
+function showInsecureDocumentRequestError(err) {
+  console.error('Insecure document request:', err.friendlyMessage);
+  process.exit(_INSECURE_DOCUMENT_REQUEST_EXIT_CODE);
+}
+
 /**
  * @param {LH.LighthouseError} err
  */
@@ -98,6 +105,8 @@ function handleError(err) {
     showProtocolTimeoutError();
   } else if (err.code === 'PAGE_HUNG') {
     showPageHungError(err);
+  } else if (err.code === 'INSECURE_DOCUMENT_REQUEST') {
+    showInsecureDocumentRequestError(err);
   } else {
     showRuntimeError(err);
   }
@@ -110,6 +119,11 @@ function handleError(err) {
  */
 async function saveResults(runnerResult, flags) {
   const cwd = process.cwd();
+
+  if (flags.lanternDataOutputPath) {
+    const devtoolsLog = runnerResult.artifacts.devtoolsLogs.defaultPass;
+    await assetSaver.saveLanternNetworkData(devtoolsLog, flags.lanternDataOutputPath);
+  }
 
   const shouldSaveResults = flags.auditMode || (flags.gatherMode === flags.auditMode);
   if (!shouldSaveResults) return;

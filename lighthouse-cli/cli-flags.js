@@ -35,7 +35,7 @@ function getFlags(manualArgv) {
           'lighthouse <url> --disable-device-emulation --throttling-method=provided',
           'Disable device emulation and all throttling')
       .example(
-          'lighthouse <url> --chrome-flags="--window-size=412,732"',
+          'lighthouse <url> --chrome-flags="--window-size=412,660"',
           'Launch Chrome with a specific window size')
       .example(
           'lighthouse <url> --quiet --chrome-flags="--headless"',
@@ -97,6 +97,8 @@ function getFlags(manualArgv) {
         'max-wait-for-load':
             'The timeout (in milliseconds) to wait before the page is considered done loading and the run should continue. WARNING: Very high values can lead to large traces and instability',
         'extra-headers': 'Set extra HTTP Headers to pass with request',
+        'precomputed-lantern-data-path': 'Path to the file where lantern simulation data should be read from, overwriting the lantern observed estimates for RTT and server latency.',
+        'lantern-data-output-path': 'Path to the file where lantern simulation data should be written to, can be used in a future run with the `precomputed-lantern-data-path` flag.',
         'only-audits': 'Only run the specified audits',
         'only-categories': 'Only run the specified categories',
         'skip-audits': 'Run everything except these audits',
@@ -133,11 +135,12 @@ function getFlags(manualArgv) {
       .array('skipAudits')
       .array('output')
       .string('extraHeaders')
+      .string('precomputedLanternDataPath')
+      .string('lanternDataOutputPath')
 
       // default values
       .default('chrome-flags', '')
       .default('output', ['html'])
-      .default('emulated-form-factor', 'mobile')
       .default('port', 0)
       .default('hostname', 'localhost')
       .default('enable-error-reporting', undefined) // Undefined so prompted by default

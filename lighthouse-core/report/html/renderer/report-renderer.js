@@ -24,7 +24,6 @@
  */
 
 /** @typedef {import('./dom.js')} DOM */
-/** @typedef {import('./details-renderer.js').DetailsJSON} DetailsJSON */
 
 /* globals self, Util, DetailsRenderer, CategoryRenderer, PerformanceCategoryRenderer, PwaCategoryRenderer */
 
@@ -204,6 +203,15 @@ class ReportRenderer {
     for (const category of report.reportCategories) {
       const renderer = specificCategoryRenderers[category.id] || categoryRenderer;
       categories.appendChild(renderer.render(category, report.categoryGroups));
+    }
+
+    // Fireworks
+    const scoresAll100 = report.reportCategories.every(cat => cat.score === 1);
+    if (!this._dom.isDevTools() && scoresAll100) {
+      headerContainer.classList.add('score100');
+      this._dom.find('.lh-header', headerContainer).addEventListener('click', _ => {
+        headerContainer.classList.toggle('fireworks-paused');
+      });
     }
 
     if (scoreHeader) {

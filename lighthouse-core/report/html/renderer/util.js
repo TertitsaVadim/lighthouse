@@ -62,12 +62,13 @@ class Util {
     if (typeof clone.categories !== 'object') throw new Error('No categories provided.');
     clone.reportCategories = Object.values(clone.categories);
 
-    // The proto process turns 'not-applicable' into 'not_applicable'. Correct this to support both.
-    // TODO: remove when underscore/hyphen proto issue is resolved. See #6371, #6201.
+    // Turn 'not-applicable' and 'not_applicable' into 'notApplicable' to support old reports.
+    // TODO: remove when underscore/hyphen proto issue is resolved. See #6371, #6201, #6783.
     for (const audit of Object.values(clone.audits)) {
       // @ts-ignore tsc rightly flags that this value shouldn't occur.
-      if (audit.scoreDisplayMode === 'not_applicable') {
-        audit.scoreDisplayMode = 'not-applicable';
+      // eslint-disable-next-line max-len
+      if (audit.scoreDisplayMode === 'not_applicable' || audit.scoreDisplayMode === 'not-applicable') {
+        audit.scoreDisplayMode = 'notApplicable';
       }
     }
 
@@ -143,7 +144,7 @@ class Util {
   static showAsPassed(audit) {
     switch (audit.scoreDisplayMode) {
       case 'manual':
-      case 'not-applicable':
+      case 'notApplicable':
         return true;
       case 'error':
       case 'informative':
@@ -163,7 +164,7 @@ class Util {
    */
   static calculateRating(score, scoreDisplayMode) {
     // Handle edge cases first, manual and not applicable receive 'pass', errored audits receive 'error'
-    if (scoreDisplayMode === 'manual' || scoreDisplayMode === 'not-applicable') {
+    if (scoreDisplayMode === 'manual' || scoreDisplayMode === 'notApplicable') {
       return RATINGS.PASS.label;
     } else if (scoreDisplayMode === 'error') {
       return RATINGS.ERROR.label;
@@ -448,6 +449,48 @@ class Util {
     // When testing, use a locale with more exciting numeric formatting
     if (Util.numberDateLocale === 'en-XA') Util.numberDateLocale = 'de';
   }
+
+  /**
+   * Returns only lines that are near a message, or the first few lines if there are
+   * no line messages.
+   * @param {LH.Audit.Details.SnippetValue['lines']} lines
+   * @param {LH.Audit.Details.SnippetValue['lineMessages']} lineMessages
+   * @param {number} surroundingLineCount Number of lines to include before and after
+   * the message. If this is e.g. 2 this function might return 5 lines.
+   */
+  static filterRelevantLines(lines, lineMessages, surroundingLineCount) {
+    if (lineMessages.length === 0) {
+      // no lines with messages, just return the first bunch of lines
+      return lines.slice(0, surroundingLineCount * 2 + 1);
+    }
+
+    const minGapSize = 3;
+    const lineNumbersToKeep = new Set();
+    // Sort messages so we can check lineNumbersToKeep to see how big the gap to
+    // the previous line is.
+    lineMessages = lineMessages.sort((a, b) => (a.lineNumber || 0) - (b.lineNumber || 0));
+    lineMessages.forEach(({lineNumber}) => {
+      let firstSurroundingLineNumber = lineNumber - surroundingLineCount;
+      let lastSurroundingLineNumber = lineNumber + surroundingLineCount;
+
+      while (firstSurroundingLineNumber < 1) {
+        // make sure we still show (surroundingLineCount * 2 + 1) lines in total
+        firstSurroundingLineNumber++;
+        lastSurroundingLineNumber++;
+      }
+      // If only a few lines would be omitted normally then we prefer to include
+      // extra lines to avoid the tiny gap
+      if (lineNumbersToKeep.has(firstSurroundingLineNumber - minGapSize - 1)) {
+        firstSurroundingLineNumber -= minGapSize;
+      }
+      for (let i = firstSurroundingLineNumber; i <= lastSurroundingLineNumber; i++) {
+        const surroundingLineNumber = i;
+        lineNumbersToKeep.add(surroundingLineNumber);
+      }
+    });
+
+    return lines.filter(line => lineNumbersToKeep.has(line.lineNumber));
+  }
 }
 
 /**
@@ -476,6 +519,8 @@ Util.UIStrings = {
   warningHeader: 'Warnings: ',
   /** The tooltip text on an expandable chevron icon. Clicking the icon expands a section to reveal a list of audit results that was hidden by default. */
   auditGroupExpandTooltip: 'Show audits',
+  /** Section heading shown above a list of passed audits that contain warnings. Audits under this section do not negatively impact the score, but Lighthouse has generated some potentially actionable suggestions that should be reviewed. This section is expanded by default and displays after the failing audits. */
+  warningAuditsGroupTitle: 'Passed audits but with warnings',
   /** Section heading shown above a list of audits that are passing. 'Passed' here refers to a passing grade. This section is collapsed by default, as the user should be focusing on the failed audits instead. Users can click this heading to reveal the list. */
   passedAuditsGroupTitle: 'Passed audits',
   /** Section heading shown above a list of audits that do not apply to the page. For example, if an audit is 'Are images optimized?', but the page has no images on it, the audit will be marked as not applicable. This is neither passing or failing. This section is collapsed by default, as the user should be focusing on the failed audits instead. Users can click this heading to reveal the list. */
@@ -492,6 +537,11 @@ Util.UIStrings = {
   crcInitialNavigation: 'Initial Navigation',
   /** Label of value shown in the summary of critical request chains. Refers to the total amount of time (milliseconds) of the longest critical path chain/sequence of network requests. Example value: 2310 ms */
   crcLongestDurationLabel: 'Maximum critical path latency:',
+
+  /** Label for button that shows all lines of the snippet when clicked */
+  snippetExpandButtonLabel: 'Expand snippet',
+  /** Label for button that only shows a few lines of the snippet when clicked */
+  snippetCollapseButtonLabel: 'Collapse snippet',
 
   /** Explanation shown to users below performance results to inform them that the test was done with a 4G network connection and to warn them that the numbers they see will likely change slightly the next time they run Lighthouse. 'Lighthouse' becomes link text to additional documentation. */
   lsPerformanceCategoryDescription: '[Lighthouse](https://developers.google.com/web/tools/lighthouse/) analysis of the current page on an emulated mobile network. Values are estimated and may vary.',

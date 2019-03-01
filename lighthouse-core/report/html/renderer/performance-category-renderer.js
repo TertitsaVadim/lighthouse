@@ -19,8 +19,6 @@
 /* globals self, Util, CategoryRenderer */
 
 /** @typedef {import('./dom.js')} DOM */
-/** @typedef {import('./details-renderer.js').FilmstripDetails} FilmstripDetails */
-/** @typedef {LH.Result.Audit.OpportunityDetails} OpportunityDetails */
 
 class PerformanceCategoryRenderer extends CategoryRenderer {
   /**
@@ -67,8 +65,7 @@ class PerformanceCategoryRenderer extends CategoryRenderer {
     if (!audit.result.details || audit.result.scoreDisplayMode === 'error') {
       return element;
     }
-    // TODO(bckenny): remove cast when details is fully discriminated based on `type`.
-    const details = /** @type {OpportunityDetails} */ (audit.result.details);
+    const details = audit.result.details;
     if (details.type !== 'opportunity') {
       return element;
     }
@@ -98,8 +95,7 @@ class PerformanceCategoryRenderer extends CategoryRenderer {
    */
   _getWastedMs(audit) {
     if (audit.result.details && audit.result.details.type === 'opportunity') {
-      // TODO(bckenny): remove cast when details is fully discriminated based on `type`.
-      const details = /** @type {OpportunityDetails} */ (audit.result.details);
+      const details = audit.result.details;
       if (typeof details.overallSavingsMs !== 'number') {
         throw new Error('non-opportunity details passed to _getWastedMs');
       }
@@ -129,7 +125,7 @@ class PerformanceCategoryRenderer extends CategoryRenderer {
 
     // Metrics
     const metricAudits = category.auditRefs.filter(audit => audit.group === 'metrics');
-    const metricAuditsEl = this.renderAuditGroup(groups.metrics, {expandable: false});
+    const metricAuditsEl = this.renderAuditGroup(groups.metrics);
 
     const keyMetrics = metricAudits.filter(a => a.weight >= 3);
     const otherMetrics = metricAudits.filter(a => a.weight < 3);
@@ -162,7 +158,7 @@ class PerformanceCategoryRenderer extends CategoryRenderer {
     if (thumbnailResult && thumbnailResult.details) {
       timelineEl.id = thumbnailResult.id;
       const filmstripEl = this.detailsRenderer.render(thumbnailResult.details);
-      timelineEl.appendChild(filmstripEl);
+      filmstripEl && timelineEl.appendChild(filmstripEl);
     }
 
     // Opportunities
@@ -176,7 +172,7 @@ class PerformanceCategoryRenderer extends CategoryRenderer {
       const wastedMsValues = opportunityAudits.map(audit => this._getWastedMs(audit));
       const maxWaste = Math.max(...wastedMsValues);
       const scale = Math.max(Math.ceil(maxWaste / 1000) * 1000, minimumScale);
-      const groupEl = this.renderAuditGroup(groups['load-opportunities'], {expandable: false});
+      const groupEl = this.renderAuditGroup(groups['load-opportunities']);
       const tmpl = this.dom.cloneTemplate('#tmpl-lh-opportunity-header', this.templateContext);
 
       this.dom.find('.lh-load-opportunity__col--one', tmpl).textContent =
@@ -202,7 +198,7 @@ class PerformanceCategoryRenderer extends CategoryRenderer {
         });
 
     if (diagnosticAudits.length) {
-      const groupEl = this.renderAuditGroup(groups['diagnostics'], {expandable: false});
+      const groupEl = this.renderAuditGroup(groups['diagnostics']);
       diagnosticAudits.forEach((item, i) => groupEl.appendChild(this.renderAudit(item, i)));
       groupEl.classList.add('lh-audit-group--diagnostics');
       element.appendChild(groupEl);

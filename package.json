@@ -1,6 +1,6 @@
 {
   "name": "lighthouse",
-  "version": "4.0.0-beta",
+  "version": "4.1.0",
   "description": "Lighthouse",
   "main": "./lighthouse-core/index.js",
   "bin": {
@@ -81,6 +81,7 @@
     "@types/google.analytics": "0.0.39",
     "@types/inquirer": "^0.0.35",
     "@types/intl-messageformat": "^1.3.0",
+    "@types/jest": "^23.3.10",
     "@types/jpeg-js": "^0.3.0",
     "@types/lodash.isequal": "^4.5.2",
     "@types/make-dir": "^1.0.3",
@@ -100,10 +101,10 @@
     "browserify": "^16.2.3",
     "bundlesize": "^0.14.4",
     "chalk": "^2.4.1",
-    "codecov": "^2.2.0",
-    "commitizen": "^2.9.6",
+    "codecov": "^3.2.0",
+    "commitizen": "^2.10.1",
     "conventional-changelog-cli": "^1.3.4",
-    "coveralls": "^2.11.9",
+    "coveralls": "^3.0.3",
     "cpy": "^7.0.1",
     "csv-validator": "^0.0.3",
     "cz-customizable": "^5.2.0",
@@ -112,9 +113,6 @@
     "eslint-config-google": "^0.9.1",
     "gh-pages": "^2.0.1",
     "glob": "^7.1.3",
-    "gulp": "^3.9.1",
-    "gulp-replace": "^0.5.4",
-    "gulp-util": "^3.0.7",
     "idb-keyval": "2.2.0",
     "intl": "^1.2.5",
     "jest": "^23.6.0",
@@ -136,11 +134,11 @@
     "zone.js": "^0.7.3"
   },
   "dependencies": {
-    "axe-core": "3.0.0-beta.2",
+    "axe-core": "3.1.2",
     "chrome-launcher": "^0.10.5",
     "configstore": "^3.1.1",
-    "cssstyle": "1.1.1",
-    "details-element-polyfill": "2.1.1",
+    "cssstyle": "1.2.1",
+    "details-element-polyfill": "2.2.0",
     "esprima": "^4.0.1",
     "http-link-header": "^0.8.0",
     "inquirer": "^3.3.0",
@@ -160,7 +158,7 @@
     "robots-parser": "^2.0.1",
     "semver": "^5.3.0",
     "speedline-core": "1.4.2",
-    "update-notifier": "^2.1.0",
+    "update-notifier": "^2.5.0",
     "ws": "3.3.2",
     "yargs": "3.32.0",
     "yargs-parser": "7.0.0"
@@ -186,7 +184,7 @@
     },
     {
       "path": "./dist/viewer/src/viewer.js",
-      "threshold": "65 Kb"
+      "threshold": "70 Kb"
     }
   ],
   "nyc": {

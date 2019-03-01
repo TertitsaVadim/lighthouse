@@ -62,56 +62,17 @@ declare global {
          * 'binary': pass/fail audit (0 and 1 are only possible scores).
          * 'numeric': scores of 0-1 (map to displayed scores of 0-100).
          * 'informative': the audit is an FYI only, and can't be interpreted as pass/fail. Score is null and should be ignored.
-         * 'not-applicable': the audit turned out to not apply to the page. Score is null and should be ignored.
+         * 'notApplicable': the audit turned out to not apply to the page. Score is null and should be ignored.
          * 'manual': The audit exists only to tell you to review something yourself. Score is null and should be ignored.
          * 'error': There was an error while running the audit (check `errorMessage` for details). Score is null and should be ignored.
          */
-        scoreDisplayMode: 'binary' | 'numeric' | 'informative' | 'not-applicable' | 'manual' | 'error';
+        scoreDisplayMode: 'binary' | 'numeric' | 'informative' | 'notApplicable' | 'manual' | 'error';
         /** An explanation of audit-related issues encountered on the test page. */
         explanation?: string;
         /** Extra information provided by some types of audits. */
-        details?: Audit.MetricDetails | Audit.OpportunityDetails;
+        details?: never;
         /** Error message from any exception thrown while running this audit. */
         errorMessage?: string;
-      }
-
-      export module Audit {
-        export interface MetricDetails {
-          type: 'metric';
-          /** The value of the metric expressed in milliseconds. */
-          timespanMs?: number;
-        }
-
-        export interface OpportunityDetails {
-          type: 'opportunity';
-          overallSavingsMs: number
-          overallSavingsBytes?: number
-          headings: ColumnHeading[];
-          items: (WastedBytesDetailsItem | WastedTimeDetailsItem)[];
-        }
-
-        export interface ColumnHeading {
-          /** The property key name within DetailsItem being described. */
-          key: string;
-          /** Readable text label of the field. */
-          label: string;
-          // TODO(bckenny): should be just string and let lhr be more specific?
-          valueType: 'url' | 'timespanMs' | 'bytes' | 'thumbnail';
-        }
-
-        export interface WastedBytesDetailsItem {
-          url: string;
-          wastedBytes?: number;
-          totalBytes?: number;
-          [p: string]: number | boolean | string | undefined;
-        }
-
-        export interface WastedTimeDetailsItem {
-          url: string;
-          wastedMs: number;
-          totalBytes?: number;
-          [p: string]: number | boolean | string | undefined;
-        }
       }
     }
   }

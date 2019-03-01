@@ -29,6 +29,8 @@ declare global {
       NetworkUserAgent: string;
       /** The benchmark index that indicates rough device class. */
       BenchmarkIndex: number;
+      /** Parsed version of the page's Web App Manifest, or null if none found. */
+      WebAppManifest: Artifacts.Manifest | null;
       /** A set of page-load traces, keyed by passName. */
       traces: {[passName: string]: Trace};
       /** A set of DevTools debugger protocol records, keyed by passName. */
@@ -48,8 +50,8 @@ declare global {
     export interface GathererArtifacts {
       /** The results of running the aXe accessibility tests on the page. */
       Accessibility: Artifacts.Accessibility;
-      /** Information on all anchors in the page that aren't nofollow or noreferrer. */
-      AnchorsWithNoRelNoopener: {href: string; rel: string; target: string, outerHTML: string}[];
+      /** Array of all anchors on the page. */
+      AnchorElements: Artifacts.AnchorElement[];
       /** The value of the page's <html> manifest attribute, or null if not defined */
       AppCacheManifest: string | null;
       /** Array of all URLs cached in CacheStorage. */
@@ -58,8 +60,6 @@ declare global {
       Canonical: (string | null)[];
       /** Console deprecation and intervention warnings logged by Chrome during page load. */
       ChromeConsoleMessages: Crdp.Log.EntryAddedEvent[];
-      /** The href and innerText of all non-nofollow anchors in the page. */
-      CrawlableLinks: {href: string, text: string}[];
       /** CSS coverage information for styles used by page's final state. */
       CSSUsage: {rules: Crdp.CSS.RuleUsage[], stylesheets: Artifacts.CSSStyleSheetInfo[]};
       /** Information on the document's doctype(or null if not present), specifically the name, publicId, and systemId.
@@ -81,18 +81,16 @@ declare global {
       HTMLWithoutJavaScript: {bodyText: string, hasNoScript: boolean};
       /** Whether the page ended up on an HTTPS page after attempting to load the HTTP version. */
       HTTPRedirect: {value: boolean};
-      /** Information on size and loading for all the images in the page. */
-      ImageUsage: Artifacts.SingleImageUsage[];
+      /** Information on size and loading for all the images in the page. Natural size information for `picture` and CSS images is only available if the image was one of the largest 50 images. */
+      ImageElements: Artifacts.ImageElement[];
       /** Information on JS libraries and versions used by the page. */
       JSLibraries: {name: string, version: string, npmPkgName: string}[];
       /** JS coverage information for code used during page load. */
       JsUsage: Crdp.Profiler.ScriptCoverage[];
       /** Parsed version of the page's Web App Manifest, or null if none found. */
       Manifest: Artifacts.Manifest | null;
-      /** The value of the <meta name="description">'s content attribute, or null. */
-      MetaDescription: string|null;
-      /** The value of the <meta name="robots">'s content attribute, or null. */
-      MetaRobots: string|null;
+      /** The values of the <meta> elements in the head. */
+      MetaElements: Array<{name: string, content?: string}>;
       /** The URL loaded with interception */
       MixedContent: {url: string};
       /** The status code of the attempted load of the page while network access is disabled. */
@@ -115,10 +113,8 @@ declare global {
       StartUrl: {statusCode: number, explanation?: string};
       /** Information on <script> and <link> tags blocking first paint. */
       TagsBlockingFirstPaint: Artifacts.TagBlockingFirstPaint[];
-      /** The value of the <meta name="theme=color">'s content attribute, or null. */
-      ThemeColor: string|null;
-      /** The value of the <meta name="viewport">'s content attribute, or null. */
-      Viewport: string|null;
+      /** Information about tap targets including their position and size. */
+      TapTargets: Artifacts.TapTarget[];
       /** The dimensions and devicePixelRatio of the loaded viewport. */
       ViewportDimensions: Artifacts.ViewportDimensions;
     }
@@ -126,6 +122,7 @@ declare global {
     module Artifacts {
       export type NetworkRequest = _NetworkRequest;
       export type TaskNode = _TaskNode;
+      export type MetaElement = LH.Artifacts['MetaElements'][0];
 
       export interface Accessibility {
         violations: {
@@ -179,6 +176,15 @@ declare global {
         crossOrigin: 'anonymous'|'use-credentials'|null
       }
 
+      /** @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#Attributes */
+      export interface AnchorElement {
+        rel: string
+        href: string
+        text: string
+        target: string
+        outerHTML: string
+      }
+
       export interface Font {
         display: string;
         family: string;
@@ -224,31 +230,33 @@ declare global {
       // TODO(bckenny): real type for parsed manifest.
       export type Manifest = ReturnType<typeof parseManifest>;
 
-      export interface SingleImageUsage {
+      export interface ImageElement {
         src: string;
-        clientWidth: number;
-        clientHeight: number;
+        /** The displayed width of the image, uses img.width when available falling back to clientWidth. See https://codepen.io/patrickhulce/pen/PXvQbM for examples. */
+        displayedWidth: number;
+        /** The displayed height of the image, uses img.height when available falling back to clientHeight. See https://codepen.io/patrickhulce/pen/PXvQbM for examples. */
+        displayedHeight: number;
+        /** The natural width of the underlying image, uses img.naturalWidth. See https://codepen.io/patrickhulce/pen/PXvQbM for examples. */
         naturalWidth: number;
+        /** The natural height of the underlying image, uses img.naturalHeight. See https://codepen.io/patrickhulce/pen/PXvQbM for examples. */
         naturalHeight: number;
-        isCss: boolean;
-        isPicture: boolean;
-        usesObjectFit: boolean;
+        /** The BoundingClientRect of the element. */
         clientRect: {
           top: number;
           bottom: number;
           left: number;
           right: number;
         };
-        networkRecord?: {
-          url: string;
-          resourceSize: number;
-          startTime: number;
-          endTime: number;
-          responseReceivedTime: number;
-          mimeType: string;
-        };
-        width?: number;
-        height?: number;
+        /** Flags whether this element was an image via CSS background-image rather than <img> tag. */
+        isCss: boolean;
+        /** Flags whether this element was contained within a <picture> tag. */
+        isPicture: boolean;
+        /** Flags whether this element was sized using a non-default `object-fit` CSS property. */
+        usesObjectFit: boolean;
+        /** The size of the underlying image file in bytes. 0 if the file could not be identified. */
+        resourceSize: number;
+        /** The MIME type of the underlying image file. */
+        mimeType?: string;
       }
 
       export interface OptimizedImage {
@@ -295,6 +303,14 @@ declare global {
         right: number;
         bottom: number;
         left: number;
+      }
+
+      export interface TapTarget {
+        snippet: string,
+        selector: string,
+        path: string,
+        href: string,
+        clientRects: Rect[]
       }
 
       export interface ViewportDimensions {

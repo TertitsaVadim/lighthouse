@@ -14,22 +14,26 @@ const validViewport = 'width=device-width';
 /* eslint-env jest */
 
 describe('SEO: Font size audit', () => {
+  const makeMetaElements = viewport => [{name: 'viewport', content: viewport}];
+
   it('fails when viewport is not set', () => {
     const artifacts = {
       URL,
-      Viewport: null,
+      MetaElements: [],
       FontSize: [],
     };
 
     const auditResult = FontSizeAudit.audit(artifacts);
     assert.equal(auditResult.rawValue, false);
-    assert.ok(auditResult.explanation.includes('missing viewport'));
+    expect(auditResult.explanation)
+      .toBeDisplayString('Text is illegible because there\'s ' +
+        'no viewport meta tag optimized for mobile screens.');
   });
 
   it('fails when less than 60% of text is legible', () => {
     const artifacts = {
       URL,
-      Viewport: validViewport,
+      MetaElements: makeMetaElements(validViewport),
       FontSize: {
         totalTextLength: 100,
         visitedTextLength: 100,
@@ -44,14 +48,14 @@ describe('SEO: Font size audit', () => {
 
     const auditResult = FontSizeAudit.audit(artifacts);
     assert.equal(auditResult.rawValue, false);
-    assert.ok(auditResult.explanation.includes('41%'));
+    expect(auditResult.explanation).toBeDisplayString('41% of text is too small.');
     expect(auditResult.displayValue).toBeDisplayString('59% legible text');
   });
 
   it('passes when there is no text', () => {
     const artifacts = {
       URL,
-      Viewport: validViewport,
+      MetaElements: makeMetaElements(validViewport),
       FontSize: {
         totalTextLength: 0,
         visitedTextLength: 0,
@@ -70,7 +74,7 @@ describe('SEO: Font size audit', () => {
   it('passes when more than 60% of text is legible', () => {
     const artifacts = {
       URL,
-      Viewport: validViewport,
+      MetaElements: makeMetaElements(validViewport),
       FontSize: {
         totalTextLength: 330,
         visitedTextLength: 330,
@@ -106,7 +110,7 @@ describe('SEO: Font size audit', () => {
     };
     const artifacts = {
       URL,
-      Viewport: validViewport,
+      MetaElements: makeMetaElements(validViewport),
       FontSize: {
         totalTextLength: 7,
         visitedTextLength: 7,
@@ -130,7 +134,7 @@ describe('SEO: Font size audit', () => {
   it('adds a category for failing text that wasn\'t analyzed', () => {
     const artifacts = {
       URL,
-      Viewport: validViewport,
+      MetaElements: makeMetaElements(validViewport),
       FontSize: {
         totalTextLength: 100,
         visitedTextLength: 100,
@@ -152,7 +156,7 @@ describe('SEO: Font size audit', () => {
   it('informs user if audit haven\'t covered all text on the page', () => {
     const artifacts = {
       URL,
-      Viewport: validViewport,
+      MetaElements: makeMetaElements(validViewport),
       FontSize: {
         totalTextLength: 100,
         visitedTextLength: 50,
@@ -165,14 +169,15 @@ describe('SEO: Font size audit', () => {
     };
     const auditResult = FontSizeAudit.audit(artifacts);
     assert.equal(auditResult.rawValue, false);
-    assert.ok(auditResult.explanation.includes('50%'));
+    expect(auditResult.explanation)
+      .toBeDisplayString('100% of text is too small (based on 50% sample).');
     expect(auditResult.displayValue).toBeDisplayString('0% legible text');
   });
 
   it('maintains 2 trailing decimal places', () => {
     const artifacts = {
       URL,
-      Viewport: validViewport,
+      MetaElements: makeMetaElements(validViewport),
       FontSize: {
         totalTextLength: 323,
         visitedTextLength: 323,
@@ -191,7 +196,7 @@ describe('SEO: Font size audit', () => {
   it('maintains 2 trailing decimal places with only 1 leading digit', () => {
     const artifacts = {
       URL,
-      Viewport: validViewport,
+      MetaElements: makeMetaElements(validViewport),
       FontSize: {
         totalTextLength: 323,
         visitedTextLength: 323,

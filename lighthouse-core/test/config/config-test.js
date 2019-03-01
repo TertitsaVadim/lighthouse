@@ -94,7 +94,7 @@ describe('Config', () => {
     const configJson = {
       passes: [{
         passName: unlikelyPassName,
-        gatherers: ['viewport'],
+        gatherers: ['meta-elements'],
       }, {
         passName: unlikelyPassName,
         gatherers: ['viewport-dimensions'],
@@ -139,7 +139,7 @@ describe('Config', () => {
       passes: [{
         gatherers: [
           'viewport-dimensions',
-          'viewport',
+          'meta-elements',
         ],
       }],
       audits: ['is-on-https'],
@@ -696,6 +696,72 @@ describe('Config', () => {
     });
   });
 
+  describe('mergePlugins', () => {
+    const configFixturePath = __dirname + '/../fixtures/config-plugins/';
+
+    it('should append audits', () => {
+      const configJson = {
+        audits: ['installable-manifest', 'metrics'],
+        plugins: ['lighthouse-plugin-simple'],
+      };
+      const config = new Config(configJson, {configPath: configFixturePath});
+      assert.deepStrictEqual(config.audits.map(a => a.path),
+        ['installable-manifest', 'metrics', 'redirects', 'user-timings']);
+    });
+
+    it('should append a category', () => {
+      const configJson = {
+        extends: 'lighthouse:default',
+        plugins: ['lighthouse-plugin-simple'],
+      };
+      const config = new Config(configJson, {configPath: configFixturePath});
+      const categoryNames = Object.keys(config.categories);
+      assert.ok(categoryNames.length > 1);
+      assert.strictEqual(categoryNames[categoryNames.length - 1], 'lighthouse-plugin-simple');
+      assert.strictEqual(config.categories['lighthouse-plugin-simple'].title, 'Simple');
+    });
+
+    it('should throw if the plugin is invalid', () => {
+      const configJson = {
+        extends: 'lighthouse:default',
+        plugins: ['lighthouse-plugin-no-category'],
+      };
+      // Required to have a `category`, so plugin is invalid.
+      assert.throws(() => new Config(configJson, {configPath: configFixturePath}),
+        /^Error: lighthouse-plugin-no-category has no valid category/);
+    });
+
+    it('should throw if the plugin is not found', () => {
+      const configJson = {
+        extends: 'lighthouse:default',
+        plugins: ['lighthouse-plugin-not-a-plugin'],
+      };
+      assert.throws(() => new Config(configJson, {configPath: configFixturePath}),
+        /^Error: Unable to locate plugin: lighthouse-plugin-not-a-plugin/);
+    });
+
+    it('should throw if the plugin name does not begin with "lighthouse-plugin-"', () => {
+      const configJson = {
+        extends: 'lighthouse:default',
+        plugins: ['just-let-me-be-a-plugin'],
+      };
+      assert.throws(() => new Config(configJson, {configPath: configFixturePath}),
+        /^Error: plugin name 'just-let-me-be-a-plugin' does not start with 'lighthouse-plugin-'/);
+    });
+
+    it('should throw if the plugin name would shadow a category id', () => {
+      const configJson = {
+        extends: 'lighthouse:default',
+        plugins: ['lighthouse-plugin-simple'],
+        categories: {
+          'lighthouse-plugin-simple': {auditRefs: [{id: 'missing-audit'}]},
+        },
+      };
+      assert.throws(() => new Config(configJson, {configPath: configFixturePath}),
+        /^Error: plugin name 'lighthouse-plugin-simple' not allowed because it is the id of a category/); // eslint-disable-line max-len
+    });
+  });
+
   describe('getCategories', () => {
     it('returns the IDs & names of the categories', () => {
       const categories = Config.getCategories(origConfig);
@@ -975,7 +1041,7 @@ describe('Config', () => {
     });
   });
 
-  describe('#getDisplayString', () => {
+  describe('#getPrintString', () => {
     it('doesn\'t include empty gatherer/audit options in output', () => {
       const gOpt = 'gathererOption';
       const aOpt = 'auditOption';
@@ -984,8 +1050,8 @@ describe('Config', () => {
         passes: [{
           passName: 'defaultPass',
           gatherers: [
-            // `options` merged into default `viewport` gatherer.
-            {path: 'viewport', options: {gOpt}},
+            // `options` merged into default `scripts` gatherer.
+            {path: 'scripts', options: {gOpt}},
           ],
         }],
         audits: [
@@ -998,8 +1064,8 @@ describe('Config', () => {
       const printedConfig = JSON.parse(printed);
 
       // Check that options weren't completely eliminated.
-      const viewportGatherer = printedConfig.passes[0].gatherers.find(g => g.path === 'viewport');
-      assert.strictEqual(viewportGatherer.options.gOpt, gOpt);
+      const scriptsGatherer = printedConfig.passes[0].gatherers.find(g => g.path === 'scripts');
+      assert.strictEqual(scriptsGatherer.options.gOpt, gOpt);
       const metricsAudit = printedConfig.audits.find(a => a.path === 'metrics');
       assert.strictEqual(metricsAudit.options.aOpt, aOpt);
 

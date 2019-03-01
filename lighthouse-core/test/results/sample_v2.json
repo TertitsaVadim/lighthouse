@@ -3158,6 +3158,7 @@
     "output": [
       "json"
     ],
+    "maxWaitForFcp": 30000,
     "maxWaitForLoad": 45000,
     "throttlingMethod": "devtools",
     "throttling": {
